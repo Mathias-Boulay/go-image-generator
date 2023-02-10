@@ -5,7 +5,6 @@ import (
 	"math"
 	"src/main/utils"
 
-	"github.com/esimov/stackblur-go"
 	"github.com/fogleman/gg"
 	"github.com/icza/gog"
 )
@@ -15,14 +14,15 @@ type Blob struct {
 
 	/** Current painting context, is it dangerous to leak ? */
 	currentContext *gg.Context
+	/** Painting context isolated from the main one, used to draw the shape itself **/
+	shapeContext *gg.Context
 
 	/** Bounds, used to remap gradient shaders */
 	leftBound, rightBound gg.Point
 
 	/* Exposed stuff, made to be tweaked as one would like */
 
-	/**
-	Represent all the Points of the blob,
+	/** Represent all the Points of the blob,
 	the sequence is considered open ended and will be closed automatically
 	*/
 	Points []gg.Point
@@ -37,41 +37,45 @@ type Blob struct {
 	/** Pattern to fill the blob with, can be a gradient */
 	Pattern gg.Pattern
 
+	/** Stroke width, if 0 the shape is filled instead */
+	StrokeWidth float64
+
 	/** Clockwise rotation in degrees  */
 	Rotation int
 }
 
 func (blob *Blob) Draw(dc *gg.Context) {
+	// Setup context for this draw
+	dc.Push()
+
 	blob.currentContext = dc
 	blob.findBounds()
 
-	dc.Push()
-	center := gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
+	// Create and setup the shape context, whitin which the shape is drawn
+	blob.createShapeContext()
+	sc := blob.shapeContext
+	center := gg.Point{X: float64(sc.Width() / 2), Y: float64(sc.Height() / 2)}
+	sc.ScaleAbout(blob.Scale, blob.Scale, center.X, center.Y)
+	sc.SetFillStyle(blob)
+	sc.SetStrokeStyle(blob)
+	sc.SetLineWidth(blob.StrokeWidth)
 
-	dc.ScaleAbout(blob.Scale, blob.Scale, center.X, center.Y)
-	dc.RotateAbout(gg.Radians(float64(blob.Rotation)), center.X, center.Y)
-
-	dc.SetFillStyle(blob)
-	dc.SetStrokeStyle(blob)
-
-	dc.SetLineWidth(5)
-
+	// Fill all paths, taking into account to wrap around the list
 	for i := 0; i < len(blob.Points); i += 3 {
-		// Fill all paths, taking into account to wrap around the list
 		var midIndex, endIndex int
 		midIndex = gog.If(i+1 < len(blob.Points), i+1, 0)
 		endIndex = gog.If(i+2 < len(blob.Points), i+2, midIndex)
 
-		dc.CubicTo(
+		sc.CubicTo(
 			center.X+blob.Points[i].X, center.Y+blob.Points[i].Y,
 			center.X+blob.Points[midIndex].X, center.Y+blob.Points[midIndex].Y,
 			center.X+blob.Points[endIndex].X, center.Y+blob.Points[endIndex].Y)
 	}
 
-	// When points are a multiple of 3, we need to close out of the loop
+	// When points are a multiple of 3, we need to close out of the loop manually
 	if len(blob.Points)%3 == 0 {
 		end := len(blob.Points) - 1
-		dc.CubicTo(
+		sc.CubicTo(
 			center.X+blob.Points[end].X,
 			center.Y+blob.Points[end].Y,
 			// Yes, there is a bug about the averages, it is a feature now
@@ -83,14 +87,30 @@ func (blob *Blob) Draw(dc *gg.Context) {
 		)
 	}
 
-	dc.ClosePath() // Should not be used
-	dc.Stroke()
+	blob.applyDraw(sc)
 
-	blurred, _ := stackblur.Process(dc.Image(), 2)
+	// Draw the image from the shape context to the main drawing context
+	center = gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
+	dc.RotateAbout(gg.Radians(float64(blob.Rotation)), center.X, center.Y)
+	dc.DrawImage(sc.Image(), int(center.X)-sc.Width()/2, int(center.Y)-sc.Height()/2) // Note the offset
 	dc.Pop()
+}
 
-	dc.DrawImage(blurred, 0, 0)
+func (blob *Blob) applyDraw(dc *gg.Context) {
+	dc.ClosePath() // Avoid this having a visual effect
+	if blob.StrokeWidth != 0 {
+		dc.Stroke()
+	} else {
+		dc.Fill()
+	}
+}
 
+/** Given the current blob settings, create a perfectly sized drawing context */
+func (blob *Blob) createShapeContext() {
+	width := (blob.rightBound.X - blob.leftBound.X + blob.StrokeWidth) * blob.Scale
+	height := (blob.rightBound.Y - blob.leftBound.Y + blob.StrokeWidth) * blob.Scale
+
+	blob.shapeContext = gg.NewContext(int(width), int(height))
 }
 
 /*
@@ -114,12 +134,15 @@ func (blob *Blob) findBounds() {
 }
 
 /*
-Translation layer for gradients used by Blob
+Implement the Pattern interface ! Translation layer for gradients.
 The translation maps x and y coordinates on a 0-1000 space (since they are integers)
 and passes it down to the real pattern implementation.
 */
 func (blob *Blob) ColorAt(x, y int) color.Color {
-	center := blob.getScaledPosition(blob.currentContext)
+	center := gg.Point{
+		X: float64(blob.shapeContext.Width() / 2),
+		Y: float64(blob.shapeContext.Height() / 2),
+	}
 
 	x -= int(center.X)
 	y -= int(center.Y)
