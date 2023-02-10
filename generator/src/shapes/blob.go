@@ -5,6 +5,7 @@ import (
 	"math"
 	"src/main/utils"
 
+	"github.com/esimov/stackblur-go"
 	"github.com/fogleman/gg"
 	"github.com/icza/gog"
 )
@@ -12,9 +13,9 @@ import (
 type Blob struct {
 	/* Internal stuff, used by the drawing step */
 
-	/** Current painting context, is it dangerous to leak ? */
+	/** Current drawing context, is it dangerous to leak ? */
 	currentContext *gg.Context
-	/** Painting context isolated from the main one, used to draw the shape itself **/
+	/** drawing context isolated from the main one, used to draw the shape itself **/
 	shapeContext *gg.Context
 
 	/** Bounds, used to remap gradient shaders */
@@ -42,25 +43,60 @@ type Blob struct {
 
 	/** Clockwise rotation in degrees  */
 	Rotation int
+
+	/** Elevation, unitless for now */
+	Elevation uint32
 }
 
+/* Draw the shape within the main drawing context */
 func (blob *Blob) Draw(dc *gg.Context) {
 	// Setup context for this draw
 	dc.Push()
-
 	blob.currentContext = dc
-	blob.findBounds()
 
 	// Create and setup the shape context, whitin which the shape is drawn
+	blob.findBounds()
 	blob.createShapeContext()
 	sc := blob.shapeContext
-	center := gg.Point{X: float64(sc.Width() / 2), Y: float64(sc.Height() / 2)}
-	sc.ScaleAbout(blob.Scale, blob.Scale, center.X, center.Y)
+
+	if blob.Elevation != 0 {
+		// Draw the elevation shadow first within the context
+		sc.SetColor(color.Black)
+		blob.fillPath()
+		blob.applyDraw(sc)
+		originalImage := sc.Image()
+		blurryImage, _ := stackblur.Process(originalImage, blob.Elevation)
+
+		sc.DrawImage(blurryImage, 0, 0)
+	}
+
 	sc.SetFillStyle(blob)
 	sc.SetStrokeStyle(blob)
-	sc.SetLineWidth(blob.StrokeWidth)
+	blob.fillPath()
+	blob.applyDraw(sc)
 
-	// Fill all paths, taking into account to wrap around the list
+	// Draw the image from the shape context to the main drawing context
+	center := gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
+	dc.RotateAbout(gg.Radians(float64(blob.Rotation)), center.X, center.Y)
+	dc.DrawImage(sc.Image(), int(center.X)-sc.Width()/2, int(center.Y)-sc.Height()/2) // Note the offset
+	dc.Pop()
+}
+
+/** Actually apply the draw, with the proper method */
+func (blob *Blob) applyDraw(dc *gg.Context) {
+	dc.ClosePath() // Avoid this having a visual effect
+	if blob.StrokeWidth != 0 {
+		dc.Stroke()
+	} else {
+		dc.Fill()
+	}
+}
+
+/** Fill all paths on the current shape context, taking into account to wrap around the list */
+func (blob *Blob) fillPath() {
+	sc := blob.shapeContext
+	center := gg.Point{X: float64(sc.Width() / 2), Y: float64(sc.Height() / 2)}
+
 	for i := 0; i < len(blob.Points); i += 3 {
 		var midIndex, endIndex int
 		midIndex = gog.If(i+1 < len(blob.Points), i+1, 0)
@@ -86,23 +122,6 @@ func (blob *Blob) Draw(dc *gg.Context) {
 			center.Y+blob.Points[0].Y,
 		)
 	}
-
-	blob.applyDraw(sc)
-
-	// Draw the image from the shape context to the main drawing context
-	center = gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
-	dc.RotateAbout(gg.Radians(float64(blob.Rotation)), center.X, center.Y)
-	dc.DrawImage(sc.Image(), int(center.X)-sc.Width()/2, int(center.Y)-sc.Height()/2) // Note the offset
-	dc.Pop()
-}
-
-func (blob *Blob) applyDraw(dc *gg.Context) {
-	dc.ClosePath() // Avoid this having a visual effect
-	if blob.StrokeWidth != 0 {
-		dc.Stroke()
-	} else {
-		dc.Fill()
-	}
 }
 
 /** Given the current blob settings, create a perfectly sized drawing context */
@@ -110,7 +129,17 @@ func (blob *Blob) createShapeContext() {
 	width := (blob.rightBound.X - blob.leftBound.X + blob.StrokeWidth) * blob.Scale
 	height := (blob.rightBound.Y - blob.leftBound.Y + blob.StrokeWidth) * blob.Scale
 
-	blob.shapeContext = gg.NewContext(int(width), int(height))
+	// Elevation Radius is uncoupled from actual scale
+	width += float64(blob.Elevation) * 2
+	height += float64(blob.Elevation) * 2
+
+	sc := gg.NewContext(int(width), int(height))
+	blob.shapeContext = sc
+
+	// Then setup it with the appropriate settings
+	center := gg.Point{X: float64(sc.Width() / 2), Y: float64(sc.Height() / 2)}
+	sc.ScaleAbout(blob.Scale, blob.Scale, center.X, center.Y)
+	sc.SetLineWidth(blob.StrokeWidth)
 }
 
 /*
