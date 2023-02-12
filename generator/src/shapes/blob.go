@@ -224,8 +224,8 @@ func (blob *Blob) ColorAt(x, y int) color.Color {
 	x -= int(center.X)
 	y -= int(center.Y)
 
-	x /= int(blob.Scale)
-	y /= int(blob.Scale)
+	x = int(float64(x) / blob.Scale)
+	y = int(float64(y) / blob.Scale)
 
 	mappedX := utils.Map(float64(x), blob.leftBound.X, blob.rightBound.X, 0, 1000)
 	mappedY := utils.Map(float64(y), blob.leftBound.Y, blob.rightBound.Y, 0, 1000)
