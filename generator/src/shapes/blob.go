@@ -10,6 +10,12 @@ import (
 	"github.com/icza/gog"
 )
 
+const (
+	SHAPE_TYPE_BLOB    = 0
+	SHAPE_TYPE_POLYGON = 1
+	SHAPE_TYPE_CIRCLE  = 2
+)
+
 type Blob struct {
 	/* Internal stuff, used by the drawing step */
 
@@ -21,12 +27,15 @@ type Blob struct {
 	/** Bounds, used to remap gradient shaders */
 	leftBound, rightBound gg.Point
 
-	/* Exposed stuff, made to be tweaked as one would like */
-
-	/** Represent all the Points of the blob,
+	/** Represent all the points of the blob,
 	the sequence is considered open ended and will be closed automatically
 	*/
-	Points []gg.Point
+	points []gg.Point
+
+	/** Represent the shape type. Affects how points are used */
+	shapeType int
+
+	/* Exposed stuff, made to be tweaked as one would like */
 
 	/** Position withing the drawing context,
 	between 0 and 1 on each axis to accomodate for various formats */
@@ -46,6 +55,24 @@ type Blob struct {
 
 	/** Elevation, unitless for now */
 	Elevation uint32
+}
+
+func (blob *Blob) SetBlob(points []gg.Point) {
+	blob.points = points
+	blob.shapeType = SHAPE_TYPE_BLOB
+}
+
+func (blob *Blob) SetPolygon(points []gg.Point) {
+	blob.points = points
+	blob.shapeType = SHAPE_TYPE_POLYGON
+}
+
+func (blob *Blob) SetCircle(radius float64) {
+	blob.points = []gg.Point{
+		{X: -radius, Y: -radius},
+		{X: radius, Y: radius},
+	}
+	blob.shapeType = SHAPE_TYPE_CIRCLE
 }
 
 /* Draw the shape within the main drawing context */
@@ -84,7 +111,15 @@ func (blob *Blob) Draw(dc *gg.Context) {
 
 /** Actually apply the draw, with the proper method */
 func (blob *Blob) applyDraw(dc *gg.Context) {
-	dc.ClosePath() // Avoid this having a visual effect
+
+	// Draw a circle, if necessary
+	if blob.shapeType == SHAPE_TYPE_CIRCLE {
+		center := gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
+		dc.DrawCircle(center.X, center.Y, blob.points[1].X)
+	} else {
+		dc.ClosePath() // Avoid this having a visual effect
+	}
+
 	if blob.StrokeWidth != 0 {
 		dc.Stroke()
 	} else {
@@ -97,30 +132,43 @@ func (blob *Blob) fillPath() {
 	sc := blob.shapeContext
 	center := gg.Point{X: float64(sc.Width() / 2), Y: float64(sc.Height() / 2)}
 
-	for i := 0; i < len(blob.Points); i += 3 {
-		var midIndex, endIndex int
-		midIndex = gog.If(i+1 < len(blob.Points), i+1, 0)
-		endIndex = gog.If(i+2 < len(blob.Points), i+2, midIndex)
-
-		sc.CubicTo(
-			center.X+blob.Points[i].X, center.Y+blob.Points[i].Y,
-			center.X+blob.Points[midIndex].X, center.Y+blob.Points[midIndex].Y,
-			center.X+blob.Points[endIndex].X, center.Y+blob.Points[endIndex].Y)
+	if blob.shapeType == SHAPE_TYPE_CIRCLE {
+		return
 	}
 
-	// When points are a multiple of 3, we need to close out of the loop manually
-	if len(blob.Points)%3 == 0 {
-		end := len(blob.Points) - 1
-		sc.CubicTo(
-			center.X+blob.Points[end].X,
-			center.Y+blob.Points[end].Y,
-			// Yes, there is a bug about the averages, it is a feature now
-			center.X+(blob.Points[end].X+blob.Points[0].X)/2,
-			center.Y+(blob.Points[0].Y+blob.Points[0].Y)/2,
+	if blob.shapeType == SHAPE_TYPE_POLYGON {
+		for _, v := range blob.points {
+			sc.LineTo(center.X+v.X, center.Y+v.Y)
+		}
+		return
+	}
 
-			center.X+blob.Points[0].X,
-			center.Y+blob.Points[0].Y,
-		)
+	if blob.shapeType == SHAPE_TYPE_BLOB {
+		for i := 0; i < len(blob.points); i += 3 {
+			var midIndex, endIndex int
+			midIndex = gog.If(i+1 < len(blob.points), i+1, 0)
+			endIndex = gog.If(i+2 < len(blob.points), i+2, midIndex)
+
+			sc.CubicTo(
+				center.X+blob.points[i].X, center.Y+blob.points[i].Y,
+				center.X+blob.points[midIndex].X, center.Y+blob.points[midIndex].Y,
+				center.X+blob.points[endIndex].X, center.Y+blob.points[endIndex].Y)
+		}
+
+		// When points are a multiple of 3, we need to close out of the loop manually
+		if len(blob.points)%3 == 0 {
+			end := len(blob.points) - 1
+			sc.CubicTo(
+				center.X+blob.points[end].X,
+				center.Y+blob.points[end].Y,
+				// Yes, there is a bug about the averages, it is a feature now
+				center.X+(blob.points[end].X+blob.points[0].X)/2,
+				center.Y+(blob.points[0].Y+blob.points[0].Y)/2,
+
+				center.X+blob.points[0].X,
+				center.Y+blob.points[0].Y,
+			)
+		}
 	}
 }
 
@@ -152,7 +200,7 @@ func (blob *Blob) findBounds() {
 	right := math.Inf(-1)
 	bottom := math.Inf(-1)
 
-	for _, v := range blob.Points {
+	for _, v := range blob.points {
 		left = math.Min(left, v.X)
 		top = math.Min(top, v.Y)
 		right = math.Max(right, v.X)

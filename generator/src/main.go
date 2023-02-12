@@ -34,7 +34,7 @@ func main() {
 }*/
 
 func main() {
-	dc := gg.NewContext(720, 720)
+	dc := gg.NewContext(500, 500)
 	dc.SetColor(color.RGBA{255, 255, 255, 255})
 	dc.DrawRectangle(0, 0, float64(dc.Width()), float64(dc.Height()))
 	dc.Fill()
@@ -43,23 +43,35 @@ func main() {
 	//DrawCircleBackground(dc, centerColor, outerColor, 50, 10)
 
 	blob := shapes.Blob{
-		Points: []gg.Point{
-			{X: -100, Y: -100},
-			{X: 100, Y: -100},
-			{X: 100, Y: 100},
-			{X: -100, Y: 100},
-		},
 
-		Position: gg.Point{X: 0.4, Y: 0.3},
+		Position: gg.Point{X: 0.5, Y: 0.5},
 
 		Scale: 2,
 
 		Pattern: gg.NewSolidPattern(color.RGBA{255, 255, 0, 255}),
 
-		Rotation: 50,
+		Rotation: 0,
+
+		StrokeWidth: 5,
 	}
 
-	grad := gg.NewLinearGradient(0, 0, 1000, 1000)
+	blob.SetPolygon([]gg.Point{
+		{X: -100, Y: -100},
+		{X: 100, Y: -100},
+		{X: 100, Y: 100},
+		{X: -100, Y: 100},
+	})
+
+	// blob.SetBlob([]gg.Point{
+	// 	{X: -100, Y: -100},
+	// 	{X: 100, Y: -100},
+	// 	{X: 100, Y: 100},
+	// 	{X: -100, Y: 100},
+	// })
+
+	//blob.SetCircle(100)
+
+	grad := gg.NewLinearGradient(utils.ToLinerarGradientCoordinates(0))
 	grad.AddColorStop(0, color.RGBA{0, 255, 0, 255})
 	grad.AddColorStop(1, color.RGBA{0, 0, 255, 255})
 
@@ -68,6 +80,7 @@ func main() {
 	blob.Draw(dc)
 
 	blob.Scale = 1
+	blob.Elevation = 20
 
 	blob.Draw(dc)
 
