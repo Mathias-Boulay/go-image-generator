@@ -57,16 +57,19 @@ type Blob struct {
 	Elevation uint32
 }
 
+/* Set the shape as a blob */
 func (blob *Blob) SetBlob(points []gg.Point) {
 	blob.points = points
 	blob.shapeType = SHAPE_TYPE_BLOB
 }
 
+/* Set the shape as a polygon */
 func (blob *Blob) SetPolygon(points []gg.Point) {
 	blob.points = points
 	blob.shapeType = SHAPE_TYPE_POLYGON
 }
 
+/* Set the shape as a circle */
 func (blob *Blob) SetCircle(radius float64) {
 	blob.points = []gg.Point{
 		{X: -radius, Y: -radius},
@@ -85,6 +88,8 @@ func (blob *Blob) Draw(dc *gg.Context) {
 	blob.findBounds()
 	blob.createShapeContext()
 	sc := blob.shapeContext
+	center := gg.Point{X: float64(sc.Width() / 2), Y: float64(sc.Height() / 2)}
+	sc.ScaleAbout(blob.Scale, blob.Scale, center.X, center.Y)
 
 	if blob.Elevation != 0 {
 		// Draw the elevation shadow first within the context
@@ -94,7 +99,10 @@ func (blob *Blob) Draw(dc *gg.Context) {
 		originalImage := sc.Image()
 		blurryImage, _ := stackblur.Process(originalImage, blob.Elevation)
 
+		// Temporary restore the scale context, else the image will get scaled twice
+		sc.ScaleAbout(1/blob.Scale, 1/blob.Scale, center.X, center.Y)
 		sc.DrawImage(blurryImage, 0, 0)
+		sc.ScaleAbout(blob.Scale, blob.Scale, center.X, center.Y)
 	}
 
 	sc.SetFillStyle(blob)
@@ -103,7 +111,7 @@ func (blob *Blob) Draw(dc *gg.Context) {
 	blob.applyDraw(sc)
 
 	// Draw the image from the shape context to the main drawing context
-	center := gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
+	center = gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
 	dc.RotateAbout(gg.Radians(float64(blob.Rotation)), center.X, center.Y)
 	dc.DrawImage(sc.Image(), int(center.X)-sc.Width()/2, int(center.Y)-sc.Height()/2) // Note the offset
 	dc.Pop()
@@ -185,8 +193,6 @@ func (blob *Blob) createShapeContext() {
 	blob.shapeContext = sc
 
 	// Then setup it with the appropriate settings
-	center := gg.Point{X: float64(sc.Width() / 2), Y: float64(sc.Height() / 2)}
-	sc.ScaleAbout(blob.Scale, blob.Scale, center.X, center.Y)
 	sc.SetLineWidth(blob.StrokeWidth)
 }
 
