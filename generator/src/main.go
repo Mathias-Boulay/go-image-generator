@@ -2,7 +2,6 @@ package main
 
 import (
 	"image/color"
-	"math"
 	"src/main/shapes"
 	"src/main/utils"
 
@@ -46,13 +45,13 @@ func main() {
 
 		Position: gg.Point{X: 0.5, Y: 0.5},
 
-		Scale: 2,
+		Scale: 1,
 
 		Pattern: gg.NewSolidPattern(color.RGBA{255, 255, 0, 255}),
 
 		Rotation: 0,
 
-		StrokeWidth: 5,
+		StrokeWidth: 0,
 	}
 
 	blob.SetPolygon([]gg.Point{
@@ -76,25 +75,14 @@ func main() {
 	grad.AddColorStop(1, color.RGBA{0, 0, 255, 255})
 
 	blob.Pattern = grad
-
-	blob.Draw(dc)
-
-	blob.Scale = 1
 	blob.Elevation = 20
-
-	blob.Draw(dc)
+	blob.Scale = 2
+	blob.DrawStepped(dc, &shapes.SteppedDrawingOptions{
+		Steps:         10,
+		ScaleStep:     -0.15,
+		TranslateStep: gg.Point{X: 0.02, Y: 0.02},
+		RotationStep:  10,
+	})
 
 	dc.SavePNG("out.png")
-}
-
-func DrawCircleBackground(dc *gg.Context, centerColor, outerColor color.Color, layerCount, layerWidth int) {
-
-	for i := 1; i <= layerCount; i++ {
-		dc.SetColor(utils.ColorLerp(centerColor, outerColor, (1. / float64(layerCount) * float64(i))))
-		dc.MoveTo(250, 0)
-
-		dc.DrawCircle(float64(dc.Width()/2), float64(dc.Height()/2),
-			math.Max(float64(dc.Width()-i*layerWidth), float64(dc.Height()-i*layerWidth))/2)
-		dc.Fill()
-	}
 }

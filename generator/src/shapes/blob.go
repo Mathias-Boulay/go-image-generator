@@ -253,3 +253,16 @@ func getScaledWidth(dc *gg.Context, position gg.Point) float64 {
 func getScaledHeight(dc *gg.Context, position gg.Point) float64 {
 	return float64(dc.Height()) * position.Y
 }
+
+/* Draw the blob multiple times */
+func (blob *Blob) DrawStepped(dc *gg.Context, options *SteppedDrawingOptions) {
+	for i := 0; i < options.Steps; i++ {
+		blob.Draw(dc)
+
+		blob.Scale += options.ScaleStep
+		blob.Rotation += options.RotationStep
+		blob.Position.X += options.TranslateStep.X
+		blob.Position.Y += options.TranslateStep.Y
+		blob.Elevation += options.ElevationStep
+	}
+}
