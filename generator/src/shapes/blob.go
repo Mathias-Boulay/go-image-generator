@@ -241,6 +241,23 @@ func (blob *Blob) ColorAt(x, y int) color.Color {
 	)
 }
 
+/* Draw the blob multiple times */
+func (blob *Blob) DrawStepped(dc *gg.Context, options *SteppedDrawingOptions) {
+	// Replace the pattern implementation
+	options.resetStepCount()
+	blob.Pattern = options
+	for i := 0; i < options.Steps; i++ {
+		blob.Draw(dc)
+
+		blob.Scale += options.ScaleStep
+		blob.Rotation += options.RotationStep
+		blob.Position.X += options.TranslateStep.X
+		blob.Position.Y += options.TranslateStep.Y
+		blob.Elevation += options.ElevationStep
+		options.incStepCount()
+	}
+}
+
 /* Util functions for scaling back the [0,1] coords */
 func (blob *Blob) getScaledPosition(dc *gg.Context) gg.Point {
 	return gg.Point{X: getScaledWidth(dc, blob.Position), Y: getScaledHeight(dc, blob.Position)}
@@ -252,17 +269,4 @@ func getScaledWidth(dc *gg.Context, position gg.Point) float64 {
 
 func getScaledHeight(dc *gg.Context, position gg.Point) float64 {
 	return float64(dc.Height()) * position.Y
-}
-
-/* Draw the blob multiple times */
-func (blob *Blob) DrawStepped(dc *gg.Context, options *SteppedDrawingOptions) {
-	for i := 0; i < options.Steps; i++ {
-		blob.Draw(dc)
-
-		blob.Scale += options.ScaleStep
-		blob.Rotation += options.RotationStep
-		blob.Position.X += options.TranslateStep.X
-		blob.Position.Y += options.TranslateStep.Y
-		blob.Elevation += options.ElevationStep
-	}
 }

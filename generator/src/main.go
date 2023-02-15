@@ -1,15 +1,13 @@
 package main
 
 import (
-	"image/color"
-	"src/main/shapes"
-	"src/main/utils"
+	shapes "src/main/api"
 
-	"github.com/fogleman/gg"
+	"github.com/gin-gonic/gin"
 )
 
 /*
-func main() {
+func toto() {
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
 		fmt.Println("ping")
@@ -31,7 +29,7 @@ func main() {
 	})
 	r.Run() // listen and serve on 0.0.0.0:8080
 }*/
-
+/*
 func main() {
 	dc := gg.NewContext(500, 500)
 	dc.SetColor(color.RGBA{255, 255, 255, 255})
@@ -78,11 +76,20 @@ func main() {
 	blob.Elevation = 20
 	blob.Scale = 2
 	blob.DrawStepped(dc, &shapes.SteppedDrawingOptions{
-		Steps:         10,
+		Steps:         3,
 		ScaleStep:     -0.15,
 		TranslateStep: gg.Point{X: 0.02, Y: 0.02},
 		RotationStep:  10,
+		EndPattern:    grad,
+		StartPattern:  gg.NewSolidPattern(color.RGBA{0, 0, 255, 255}),
 	})
 
 	dc.SavePNG("out.png")
+}*/
+
+func main() {
+	engine := gin.Default()
+	shapes.RegisterRoute(engine)
+
+	engine.Run() // listen and serve on 0.0.0.0:8080
 }
