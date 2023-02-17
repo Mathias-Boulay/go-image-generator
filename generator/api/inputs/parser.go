@@ -2,11 +2,11 @@ package inputs
 
 import (
 	"math"
-	"src/main/shapes"
-	"src/main/utils"
 
 	"github.com/fogleman/gg"
 	"github.com/icza/gox/imagex/colorx"
+	"github.com/mathias-boulay/generator/shapes"
+	"github.com/mathias-boulay/generator/utils"
 )
 
 /* Create the pattern from an api color input */

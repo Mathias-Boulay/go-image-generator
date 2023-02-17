@@ -1,15 +1,23 @@
 package shapes
 
 import (
+	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"src/main/api/inputs"
-	"src/main/shapes"
+	"os"
+
+	"time"
 
 	"github.com/dsnet/golib/memfile"
 	"github.com/fogleman/gg"
 	"github.com/gin-gonic/gin"
+	"github.com/mathias-boulay/generator/api/inputs"
+	"github.com/mathias-boulay/generator/shapes"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func RegisterRoute(gin *gin.Engine) {
@@ -30,6 +38,26 @@ func createImage(gc *gin.Context) {
 				"message": err.Error()})
 		return
 	}
+
+	// Log the body content to mongo db
+	// Prepare mongo connection
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel() // Close connection when shutting down the server
+	fmt.Println(os.Getenv("MONGO_URL"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URL")))
+	if err != nil {
+		panic(err)
+	}
+
+	// Store the body in a buffer to send
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(gc.Request.Body)
+
+	collection := client.Database("logs").Collection("inputs")
+	collection.InsertOne(ctx, bson.M{
+		"input": buf.String(),
+		"date":  time.Now().Unix(),
+	})
 
 	// Then create the image
 	file := memfile.New([]byte{})

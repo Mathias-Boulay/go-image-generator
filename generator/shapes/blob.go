@@ -3,11 +3,11 @@ package shapes
 import (
 	"image/color"
 	"math"
-	"src/main/utils"
 
 	"github.com/esimov/stackblur-go"
 	"github.com/fogleman/gg"
 	"github.com/icza/gog"
+	"github.com/mathias-boulay/generator/utils"
 )
 
 const (

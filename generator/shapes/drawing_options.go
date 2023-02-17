@@ -2,9 +2,9 @@ package shapes
 
 import (
 	"image/color"
-	"src/main/utils"
 
 	"github.com/fogleman/gg"
+	"github.com/mathias-boulay/generator/utils"
 )
 
 /* Struct representing parameters for the DrawStepped Blob method */

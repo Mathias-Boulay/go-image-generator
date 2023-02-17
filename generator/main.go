@@ -1,9 +1,10 @@
 package main
 
 import (
-	shapes "src/main/api"
+	//shapes "src/main/api"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mathias-boulay/generator/api/shapes"
 )
 
 /*
@@ -88,6 +89,7 @@ func main() {
 }*/
 
 func main() {
+	// Prepare API system
 	engine := gin.Default()
 	shapes.RegisterRoute(engine)
 
