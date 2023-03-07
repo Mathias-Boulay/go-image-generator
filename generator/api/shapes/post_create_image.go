@@ -24,18 +24,8 @@ func RegisterRoute(gin *gin.Engine) {
 	gin.POST("/image", createImage)
 }
 
-/*
- *
- */
-func createImage(gc *gin.Context) {
-	fmt.Println(gc.Request.Body)
-
-	body := inputs.PostCreateImage{}
-	if err := gc.ShouldBindJSON(&body); err != nil {
-		gc.AbortWithStatusJSON(http.StatusBadRequest,
-			gin.H{
-				"error":   "VALIDATEERR-1",
-				"message": err.Error()})
+func logInput(gc *gin.Context) {
+	if os.Getenv("MONGO_URL") == "" {
 		return
 	}
 
@@ -58,6 +48,24 @@ func createImage(gc *gin.Context) {
 		"input": buf.String(),
 		"date":  time.Now().Unix(),
 	})
+}
+
+/*
+ *
+ */
+func createImage(gc *gin.Context) {
+	fmt.Println(gc.Request.Body)
+
+	body := inputs.PostCreateImage{}
+	if err := gc.ShouldBindJSON(&body); err != nil {
+		gc.AbortWithStatusJSON(http.StatusBadRequest,
+			gin.H{
+				"error":   "VALIDATEERR-1",
+				"message": err.Error()})
+		return
+	}
+
+	logInput(gc)
 
 	// Then create the image
 	file := memfile.New([]byte{})
