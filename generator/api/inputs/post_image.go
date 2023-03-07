@@ -39,7 +39,7 @@ type SteppedDrawingOptions struct {
 	/* The difference in coordinates between steps
 	* Note that the coordinates interpretation will differ according to Blob settings
 	 */
-	TranslateStep []int `json:"translate_step" binding:"omitempty,len=2,omitempty"`
+	TranslateStep []float64 `json:"translate_step" binding:"omitempty,len=2,omitempty,dive,min=-1,max=1"`
 
 	/* Start and end patterns, lerping from one to another */
 	StartPattern *Pattern `json:"start_pattern" binding:"omitempty"`
