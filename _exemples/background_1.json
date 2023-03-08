@@ -1,0 +1,47 @@
+{
+  "background": {
+    "pattern_type": "LINEAR_GRADIENT",
+    "colors": ["#4E7A93", "#9DADBE"],
+    "angle": 90
+  },
+
+  "width": 1280,
+  "height": 720,
+
+  "blobs": [
+    {
+      "blob": {
+        "pattern": {
+          "pattern_type": "LINEAR_GRADIENT",
+          "colors": ["#F3B836", "#A34F00"],
+          "angle": 90
+        },
+        "coordinates": [[100, 100]],
+        "center": [0.5, 0.5],
+        "shape_type": "CIRCLE",
+        "scale": 2
+      }
+    },
+    {
+      "blob": {
+        "pattern": {
+          "pattern_type": "LINEAR_GRADIENT",
+          "colors": ["#3D5D6A", "#02091B"],
+          "angle": 90
+        },
+        "coordinates": [
+          [-100, -50],
+          [0, -50],
+          [100, -20],
+          [100, 100],
+          [100, 100],
+          [-100, 100]
+        ],
+        "center": [0.5, 0.9],
+        "shape_type": "BLOB",
+        "scale": 6.5,
+        "elevation": 5
+      }
+    }
+  ]
+}

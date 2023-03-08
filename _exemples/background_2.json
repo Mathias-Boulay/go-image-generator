@@ -1,0 +1,102 @@
+{
+  "width": 1280,
+  "height": 720,
+
+  "background": {
+    "pattern_type": "PLAIN_COLOR",
+    "colors": ["#422537"]
+  },
+
+  "blobs": [
+    {
+      "blob": {
+        "pattern": {
+          "pattern_type": "PLAIN_COLOR",
+          "colors": ["#FFFFFF"]
+        },
+        "coordinates": [
+          [-100, 20],
+          [100, 0],
+          [100, 100],
+          [-100, 100]
+        ],
+        "center": [0.5, 0.0],
+        "shape_type": "POLYGON",
+        "scale": 6.5,
+        "elevation": 25
+      }
+    },
+    {
+      "blob": {
+        "pattern": {
+          "pattern_type": "PLAIN_COLOR",
+          "colors": ["#51DFD3"]
+        },
+        "coordinates": [
+          [-100, 10],
+          [100, -50],
+          [100, 100],
+          [-100, 100]
+        ],
+        "center": [0.5, 0.5],
+        "shape_type": "POLYGON",
+        "scale": 6.5,
+        "elevation": 25
+      }
+    },
+    {
+      "blob": {
+        "pattern": {
+          "pattern_type": "PLAIN_COLOR",
+          "colors": ["#B15F85"]
+        },
+        "coordinates": [
+          [-100, -30],
+          [100, 20],
+          [100, 100],
+          [-100, 100]
+        ],
+        "center": [0.5, 0.6],
+        "shape_type": "POLYGON",
+        "scale": 6.5,
+        "elevation": 25
+      }
+    },
+    {
+      "blob": {
+        "pattern": {
+          "pattern_type": "PLAIN_COLOR",
+          "colors": ["#412536"]
+        },
+        "coordinates": [
+          [-100, 0],
+          [100, -30],
+          [100, 100],
+          [-100, 100]
+        ],
+        "center": [0.5, 0.7],
+        "shape_type": "POLYGON",
+        "scale": 6.5,
+        "elevation": 25
+      }
+    },
+    {
+      "blob": {
+        "pattern": {
+          "pattern_type": "PLAIN_COLOR",
+          "colors": ["#ED484D"]
+        },
+        "coordinates": [
+          [-100, 15],
+          [100, -70],
+          [100, 100],
+          [-100, 100]
+        ],
+        "center": [0.5, 0.8],
+        "shape_type": "POLYGON",
+        "scale": 6.5,
+        "elevation": 25
+      }
+    }
+  ]
+}
