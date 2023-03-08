@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -43,6 +44,9 @@ func logInput(gc *gin.Context) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(gc.Request.Body)
 
+	// Put back the buffer in the body, because we can't read a buffer twice in go for some reason
+	gc.Request.Body = ioutil.NopCloser(buf)
+
 	collection := client.Database("logs").Collection("inputs")
 	collection.InsertOne(ctx, bson.M{
 		"input": buf.String(),
@@ -56,6 +60,8 @@ func logInput(gc *gin.Context) {
 func createImage(gc *gin.Context) {
 	fmt.Println(gc.Request.Body)
 
+	logInput(gc)
+
 	body := inputs.PostCreateImage{}
 	if err := gc.ShouldBindJSON(&body); err != nil {
 		gc.AbortWithStatusJSON(http.StatusBadRequest,
@@ -64,8 +70,6 @@ func createImage(gc *gin.Context) {
 				"message": err.Error()})
 		return
 	}
-
-	logInput(gc)
 
 	// Then create the image
 	file := memfile.New([]byte{})
