@@ -19,8 +19,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongo-data:/data/db
-    expose:
-      - "27017"
+    ports:
+      - "27017:27017"
     networks:
       - db-network
 
