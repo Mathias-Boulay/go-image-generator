@@ -99,9 +99,13 @@ func createImage(gc *gin.Context) {
 				ScaleStep:     drawOp.ScaleStep,
 				RotationStep:  drawOp.RotationStep,
 				ElevationStep: drawOp.ElevationStep,
-				TranslateStep: gg.Point{X: float64(drawOp.TranslateStep[0]), Y: float64(drawOp.TranslateStep[1])},
+				TranslateStep: gg.Point{X: 0, Y: 0},
 				StartPattern:  inputs.FromColorInput(drawOp.StartPattern),
 				EndPattern:    inputs.FromColorInput(drawOp.EndPattern),
+			}
+
+			if len(drawOp.TranslateStep) > 0 {
+				options.TranslateStep = gg.Point{X: float64(drawOp.TranslateStep[0]), Y: float64(drawOp.TranslateStep[1])}
 			}
 
 			blob.DrawStepped(dc, &options)
