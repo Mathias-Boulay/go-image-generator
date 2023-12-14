@@ -12,7 +12,7 @@ type PostCreateImage struct {
 	Height int `json:"height" binding:"required,min=0,max=1920"`
 
 	/* The list of shapes to draw */
-	Blobs []DrawingInstructions `json:"blobs" binding:"dive,min=1,max=10"`
+	Blobs []DrawingInstructions `json:"blobs" binding:"required,min=1,max=10,dive"`
 }
 
 type DrawingInstructions struct {

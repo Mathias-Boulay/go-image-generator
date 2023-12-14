@@ -5,7 +5,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
+
 	"net/http"
 	"os"
 
@@ -45,7 +46,7 @@ func logInput(gc *gin.Context) {
 	buf.ReadFrom(gc.Request.Body)
 
 	// Put back the buffer in the body, because we can't read a buffer twice in go for some reason
-	gc.Request.Body = ioutil.NopCloser(buf)
+	gc.Request.Body = io.NopCloser(buf)
 
 	collection := client.Database("logs").Collection("inputs")
 	collection.InsertOne(ctx, bson.M{
