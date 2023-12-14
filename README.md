@@ -26,21 +26,19 @@ curl -X POST 'http://localhost:4444/image'
    -d '${the_json_body}'
 ```
 
-- Profit from your generated base 64 image !
-
-_Note:_ Access to the db is possible from localhost, as the port is exposed on the host machine?
+- Profit from your generated (base 64 if desired) image !
 
 # API Reference
 
 ```typescript
 interface Pattern {
-  pattern_type: 'PLAIN_COLOR' | 'LINEAR_GRADIENT';
+  pattern_type: "PLAIN_COLOR" | "LINEAR_GRADIENT";
   colors: string[]; // Array of hex colors
   angle: number; // Int 0-360, used for gradients
 }
 
 interface Blob {
-  shape_type: 'CIRCLE' | 'BLOB' | 'POLYGON';
+  shape_type: "CIRCLE" | "BLOB" | "POLYGON";
 
   /* Array of coordinates within a -100;100 space
     When `shape_type` is `CIRCLE`, only one point is needed, representing the radius of the circle

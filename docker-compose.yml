@@ -7,6 +7,8 @@ services:
     build: ./generator
     environment:
       MONGO_URL: ${MONGO_URL}
+      SERVER_PORT: ${SERVER_PORT}
+      SERVER_IMAGE_BINARY: ${SERVER_IMAGE_BINARY}
     ports:
       - "4444:8080"
     networks:

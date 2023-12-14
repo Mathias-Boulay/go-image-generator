@@ -3,6 +3,8 @@ package main
 import (
 	//shapes "src/main/api"
 
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mathias-boulay/generator/api/shapes"
 )
@@ -92,6 +94,10 @@ func main() {
 	// Prepare API system
 	engine := gin.Default()
 	shapes.RegisterRoute(engine)
+	port, found := os.LookupEnv("SERVER_PORT")
+	if !found {
+		port = "8080"
+	}
 
-	engine.Run() // listen and serve on 0.0.0.0:8080
+	engine.Run("0.0.0.0:" + port) // listen and serve on 0.0.0.0:8080
 }

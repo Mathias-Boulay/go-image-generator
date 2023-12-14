@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"strconv"
 
 	"net/http"
 	"os"
@@ -118,8 +119,21 @@ func createImage(gc *gin.Context) {
 	}
 
 	dc.EncodePNG(file)
+	fileBytes := file.Bytes()
 
-	gc.JSON(200, gin.H{
-		"image": base64.StdEncoding.EncodeToString(file.Bytes()),
-	})
+	binaryImage, _ := strconv.ParseBool(os.Getenv("SERVER_IMAGE_BINARY"))
+	if binaryImage {
+		gc.Header("Content-Disposition", "attachment; filename=generated_image.png")
+		gc.Header("Content-Type", "image/png")
+		gc.Header("Accept-Length", fmt.Sprintf("%d", len(fileBytes)))
+		gc.Writer.Write(fileBytes)
+		gc.JSON(http.StatusOK, gin.H{
+			"msg": "Download file successfully",
+		})
+	} else {
+		gc.JSON(200, gin.H{
+			"image": base64.StdEncoding.EncodeToString(fileBytes),
+		})
+	}
+
 }
