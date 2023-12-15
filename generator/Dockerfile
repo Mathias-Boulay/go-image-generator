@@ -1,4 +1,4 @@
-FROM golang:1.20.0-bullseye
+FROM golang:1.21.4-alpine3.18 as builder
 
 WORKDIR /opt/build/
 
@@ -8,6 +8,12 @@ COPY ./ ./
 RUN go mod download && go mod verify
 
 RUN go build -v -o /opt/app/ ./main.go
+
+
+
+FROM alpine:3.19.0
+
+COPY  --from=builder /opt/app /opt/app
 
 WORKDIR /opt/app/
 
