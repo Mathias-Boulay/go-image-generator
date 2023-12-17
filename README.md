@@ -4,7 +4,28 @@ A small image generator written in GOLANG.
 
 ![test](./generator/out.png)
 
-# Quickstart local development
+## Quickstart
+
+```bash
+docker run ghcr.io/mathias-boulay/go-image-generator:latest -p "8080:8080"
+```
+
+```properties
+# Environment variables:
+
+# MongoDB is not required, it is here for logging purposes
+MONGO_USER=<string>
+MONGO_PASSWORD=<string>
+MONGO_URL="mongodb://<string>:<string>@database:27017/"
+
+
+SERVER_PORT=<number>
+
+# Whether the image is wraped into a json as base64
+SERVER_IMAGE_BINARY=<boolean>
+```
+
+## Quickstart local development
 
 - Rename `env.localhost` file to be picked up by docker compose. It has defaults values for local development
 
