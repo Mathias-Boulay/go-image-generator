@@ -17,4 +17,11 @@ COPY  --from=builder /opt/app /opt/app
 
 WORKDIR /opt/app/
 
+
+# non root user
+RUN adduser -D golang
+RUN chown -R golang:golang /opt/app
+
+USER golang
+
 CMD ./main
