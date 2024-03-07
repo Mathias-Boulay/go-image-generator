@@ -29,3 +29,20 @@ jobs:
           # docker_io_token: ${{ secrets.DOCKER_IO_ACCESS_TOKEN }}  # see https://hub.docker.com/settings/security
           # customize the username to be used when pushing to the Docker Hub
           # docker_io_user: foobar  # see https://github.com/macbre/push-to-ghcr/issues/14
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          format: 'sarif'
+          image-ref: ghcr.io/mathias-boulay/go-image-generator:latest
+          output: 'trivy-results.sarif'
+          exit-code: 0
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
